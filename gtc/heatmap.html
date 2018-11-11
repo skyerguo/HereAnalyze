@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Heatmaps</title>
+  <style>
+    #map {
+        height: 100%;
+      }
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #info {
+          display: flex;
+          justify-content: center;
+          position: absolute; 
+          top: 100px; 
+          left: 240px; 
+          z-index: 99; 
+          background-color: white;
+          width: 80px;
+          padding: 5px;
+          border-radius: 10px;
+        }
+      #button {
+          display: flex;
+          justify-content: center;
+          position: absolute; 
+          bottom: 100px; 
+          left: 240px; 
+          z-index: 99; 
+          background-color: white;
+          width: 80px;
+          padding: 5px;
+          border-radius: 10px;
+      }
+    </style>
+
+</head>
+
+<body>
+  <div id="map"></div>
+  <div id="info"></div>
+  <script type="text/javascript" src="HeatmapInput_10percent_1101.js"></script>
+  <script type="text/javascript">
+    function initMap() {
+      var pointArray = new google.maps.MVCArray([]);
+      var mapOptions = {
+        zoom: 12,
+        center: { lat: 52.372413, lng: 4.899302 },
+        mapTypeId: 'roadmap'
+      }
+      var map = new google.maps.Map(document.getElementById('map'), mapOptions);
+      var heatmap = new google.maps.visualization.HeatmapLayer({
+        data: pointArray,
+        map: map
+      });
+
+      obj = JSON.parse(eqfeed_callback);
+      arrayLen = obj[0].contents.length;
+
+      function update(i) {
+        for (var j = 0; j < obj[0].contents[i].features.length; j++) {
+          var coords = obj[0].contents[i].features[j].coordinates;
+          var weight = obj[0].contents[i].features[j].weight;
+          pointArray.push({ location: new google.maps.LatLng(coords[0], coords[1]), weight: weight });
+        }
+        document.getElementById('info').innerHTML = obj[0].contents[i].hour + " : 00"
+      }
+
+      document.getElementById("button").addEventListener("click", function(){
+        var i = -1;
+        (function f() {
+          i = (i + 1);
+          if (i >= arrayLen) {
+            clearInterval(intervalid);
+            return;
+          }
+          while (pointArray.getLength() > 0) pointArray.pop();
+          console.log(pointArray.getLength());
+          update(i);
+          console.log(pointArray.getLength());
+          var intervalid = setTimeout(f, 10);
+        })();
+      });
+
+      function play() {
+        var i = -1;
+        (function f() {
+          i = (i + 1);
+
+          if (i >= arrayLen) {
+            clearInterval(intervalid);
+            return;
+          }
+
+          while (pointArray.getLength() > 0) pointArray.pop();
+          update(i);
+          var intervalid = setTimeout(f, 10);
+        })();
+      }
+
+      // play();
+
+    }
+    
+  </script>
+
+  <button id = "button">Start</button>
+  
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAz2QFA-Qohy1Xb2jEAGXH6caaXXMsuBL4&libraries=visualization&callback=initMap">
+  </script>
+
+</body>
+
+</html>
